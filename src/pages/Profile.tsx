@@ -1,11 +1,15 @@
 import React, { useState } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { User, MapPin, GraduationCap, Heart, Star, Edit2, Save, X } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { User, Mail, MapPin, GraduationCap, Calendar, Edit2, Save, X, Brain, Heart, Star } from 'lucide-react';
 import toast from 'react-hot-toast';
+import CareerDiscoveryQuiz from '../components/CareerDiscoveryQuiz';
 
 const Profile: React.FC = () => {
   const { user, updateProfile } = useAuth();
+  const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
+  const [showQuiz, setShowQuiz] = useState(false);
   const [formData, setFormData] = useState({
     name: user?.name || '',
     age: user?.age || '',
@@ -270,29 +274,65 @@ const Profile: React.FC = () => {
               </div>
             </div>
 
-            {/* Quiz Status */}
+            {/* Career Discovery Quiz Status */}
             <div className="mt-8 pt-8 border-t border-gray-200">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Assessment Status</h2>
-              <div className="bg-gray-50 rounded-lg p-6">
-                {user.quizCompleted ? (
+              <h2 className="text-lg font-semibold text-gray-900 mb-4">Career Discovery Assessment</h2>
+              <div className="bg-gradient-to-r from-primary-50 to-secondary-50 rounded-lg p-6">
+                {user.quizCompleted && user.quizResults ? (
                   <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-medium text-gray-900">Aptitude Assessment Completed</h3>
-                      <p className="text-gray-600">Recommended Stream: {user.recommendedStream}</p>
+                    <div className="flex items-center">
+                      <div className="bg-green-100 rounded-full p-3 mr-4">
+                        <Brain className="h-8 w-8 text-green-600" />
+                      </div>
+                      <div>
+                        <h3 className="font-medium text-gray-900">Career Discovery Quiz Completed</h3>
+                        <p className="text-gray-600">Comprehensive personality and career assessment completed</p>
+                        <p className="text-sm text-gray-500 mt-1">
+                          Results saved • {Object.keys(user.quizResults.personality || {}).length + 
+                          Object.keys(user.quizResults.academicStrengths || {}).length + 
+                          Object.keys(user.quizResults.interests || {}).length} traits analyzed
+                        </p>
+                      </div>
                     </div>
                     <div className="flex space-x-2">
-                      <button className="btn-secondary">View Results</button>
-                      <button className="btn-primary">Retake Quiz</button>
+                      <button 
+                        onClick={() => navigate('/recommendations')}
+                        className="btn-primary"
+                      >
+                        View Recommendations
+                      </button>
+                      <button 
+                        onClick={() => navigate('/quiz')}
+                        className="btn-primary"
+                      >
+                        Retake Quiz
+                      </button>
                     </div>
                   </div>
                 ) : (
                   <div className="text-center">
-                    <GraduationCap className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <h3 className="font-medium text-gray-900 mb-2">Complete Your Assessment</h3>
-                    <p className="text-gray-600 mb-4">
-                      Take our comprehensive aptitude test to get personalized career recommendations.
+                    <div className="bg-primary-100 rounded-full p-4 w-20 h-20 mx-auto mb-4 flex items-center justify-center">
+                      <Brain className="h-10 w-10 text-primary-600" />
+                    </div>
+                    <h3 className="font-medium text-gray-900 mb-2">Discover Your Career Path</h3>
+                    <p className="text-gray-600 mb-4 max-w-2xl mx-auto">
+                      Take our comprehensive Career Path Self-Discovery Quiz featuring 6 modules: Personality (MBTI + Big Five), 
+                      Academic Strengths, Interests (RIASEC), Learning Style, Work Values, and Soft Skills. 
+                      Includes AI analysis of your reflective responses.
                     </p>
-                    <button className="btn-primary">Start Assessment</button>
+                    <div className="flex flex-wrap justify-center gap-2 mb-6 text-sm">
+                      <span className="bg-primary-100 text-primary-800 px-3 py-1 rounded-full">Personality Analysis</span>
+                      <span className="bg-secondary-100 text-secondary-800 px-3 py-1 rounded-full">RIASEC Framework</span>
+                      <span className="bg-green-100 text-green-800 px-3 py-1 rounded-full">AI Insights</span>
+                      <span className="bg-blue-100 text-blue-800 px-3 py-1 rounded-full">Career Mapping</span>
+                    </div>
+                    <button 
+                      onClick={() => setShowQuiz(true)}
+                      className="btn-primary text-lg px-8 py-3"
+                    >
+                      Start Career Discovery Quiz
+                    </button>
+                    <p className="text-xs text-gray-500 mt-2">Takes approximately 15-20 minutes</p>
                   </div>
                 )}
               </div>
@@ -300,6 +340,26 @@ const Profile: React.FC = () => {
           </div>
         </div>
       </div>
+      
+      {/* Career Discovery Quiz Modal/Overlay */}
+      {showQuiz && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
+            <div className="flex justify-between items-center p-6 border-b border-gray-200">
+              <h2 className="text-2xl font-bold text-gray-900">Career Path Self-Discovery Quiz</h2>
+              <button
+                onClick={() => setShowQuiz(false)}
+                className="text-gray-400 hover:text-gray-600 transition-colors"
+              >
+                <X className="h-6 w-6" />
+              </button>
+            </div>
+            <div className="overflow-y-auto max-h-[calc(90vh-80px)]">
+              <CareerDiscoveryQuiz />
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

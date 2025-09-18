@@ -11,6 +11,7 @@ interface User {
   strengths?: string[];
   quizCompleted?: boolean;
   recommendedStream?: string;
+  quizResults?: any;
 }
 
 interface AuthContextType {

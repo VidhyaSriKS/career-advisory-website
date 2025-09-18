@@ -7,8 +7,9 @@ import Home from './pages/Home';
 import Login from './pages/auth/Login';
 import Register from './pages/auth/Register';
 import Profile from './pages/Profile';
-import Quiz from './pages/Quiz';
+import CareerDiscoveryQuiz from './components/CareerDiscoveryQuiz';
 import Results from './pages/Results';
+import CareerRecommendations from './pages/CareerRecommendations';
 import CourseMapping from './pages/CourseMapping';
 import CollegeDirectory from './pages/CollegeDirectory';
 import Timeline from './pages/Timeline';
@@ -26,8 +27,9 @@ function App() {
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
               <Route path="/profile" element={<Profile />} />
-              <Route path="/quiz" element={<Quiz />} />
+              <Route path="/quiz" element={<CareerDiscoveryQuiz />} />
               <Route path="/results" element={<Results />} />
+              <Route path="/recommendations" element={<CareerRecommendations />} />
               <Route path="/course-mapping" element={<CourseMapping />} />
               <Route path="/colleges" element={<CollegeDirectory />} />
               <Route path="/timeline" element={<Timeline />} />

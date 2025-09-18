@@ -39,10 +39,25 @@ export const userRegistrationSchema = Joi.object({
  */
 export const userProfileSchema = Joi.object({
   name: Joi.string().min(2).max(50).optional(),
+  age: Joi.number().integer().min(13).max(100).optional(),
+  grade: Joi.string().optional(),
+  location: Joi.object({
+    lat: Joi.number().required(),
+    lng: Joi.number().required()
+  }).optional(),
   educationLevel: Joi.string().valid('high_school', 'undergraduate', 'graduate', 'postgraduate').optional(),
   interests: Joi.array().items(Joi.string()).optional(),
   skills: Joi.array().items(Joi.string()).optional(),
   preferences: Joi.object().optional()
+});
+
+/**
+ * College nearby validation schema
+ */
+export const collegeNearbySchema = Joi.object({
+  lat: Joi.number().required(),
+  lng: Joi.number().required(),
+  careerField: Joi.string().required()
 });
 
 /**
@@ -88,12 +103,30 @@ export const recommendationSchema = Joi.object({
 });
 
 /**
+ * Quiz question validation schema
+ */
+export const quizQuestionSchema = Joi.object({
+  module: Joi.string().required(),
+  questionId: Joi.string().required(),
+  question: Joi.string().required(),
+  options: Joi.array().items(
+    Joi.object({
+      optionId: Joi.string().required(),
+      text: Joi.string().required(),
+      weight: Joi.number().required()
+    })
+  ).required()
+});
+
+/**
  * Quiz result validation schema
  */
 export const quizResultSchema = Joi.object({
-  answers: Joi.array().items(Joi.object({
-    questionId: Joi.string().required(),
-    answer: Joi.alternatives().try(Joi.string(), Joi.number(), Joi.array()).required()
-  })).min(1).required(),
-  completedAt: Joi.date().iso().optional()
+  uid: Joi.string().required(),
+  answers: Joi.array().items(
+    Joi.object({
+      questionId: Joi.string().required(),
+      selectedOption: Joi.string().required()
+    })
+  ).required()
 });

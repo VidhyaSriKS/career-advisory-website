@@ -10,6 +10,8 @@ import authRoutes from './routes/auth.js';
 import userRoutes from './routes/users.js';
 import careerRoutes from './routes/careers.js';
 import recommendRoutes from './routes/recommend.js';
+import quizRoutes from './routes/quiz.js';
+import collegeRoutes from './routes/colleges.js';
 
 // Import middleware
 import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
@@ -68,6 +70,8 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/careers', careerRoutes);
 app.use('/api/recommend', recommendRoutes);
+app.use('/api/quiz', quizRoutes);
+app.use('/api/colleges', collegeRoutes);
 
 // API documentation endpoint
 app.get('/api', (req, res) => {
@@ -85,6 +89,7 @@ app.get('/api', (req, res) => {
       users: {
         'GET /api/users/profile': 'Get user profile',
         'PUT /api/users/profile': 'Update user profile',
+        'POST /api/users/init': 'Initialize user profile',
         'POST /api/users/quiz-results': 'Save quiz results',
         'GET /api/users/quiz-results': 'Get quiz history',
         'POST /api/users/save-career-path': 'Save career to favorites',
@@ -97,7 +102,14 @@ app.get('/api', (req, res) => {
         'POST /api/careers': 'Create career path (Admin)',
         'PUT /api/careers/:id': 'Update career path (Admin)',
         'DELETE /api/careers/:id': 'Delete career path (Admin)',
-        'GET /api/careers/categories/list': 'Get all categories',
+        'GET /api/careers/categories/list': 'Get all categories'
+      },
+      colleges: {
+        'GET /api/colleges': 'Get all colleges (with filters)',
+        'GET /api/colleges/:id': 'Get college by ID',
+        'POST /api/colleges/nearby': 'Get colleges near location for career field'
+      },
+      careers_extra: {
         'GET /api/careers/skills/list': 'Get all skills'
       },
       recommendations: {

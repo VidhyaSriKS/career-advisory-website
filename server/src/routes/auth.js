@@ -2,6 +2,7 @@ import express from 'express';
 import { auth, firestore } from '../config/firebase.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import { validate, userRegistrationSchema } from '../middleware/validation.js';
+import { createUserProfile } from '../functions/userFunctions.js';
 
 const router = express.Router();
 
@@ -21,21 +22,9 @@ router.post('/signup', validate(userRegistrationSchema), asyncHandler(async (req
       emailVerified: false
     });
 
-    // Create user profile in Firestore
-    const userProfile = {
-      uid: userRecord.uid,
-      email,
-      name,
-      educationLevel: educationLevel || null,
-      interests: interests || [],
-      skills: [],
-      preferences: {},
-      role: 'user',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    };
-
-    await firestore.collection('users').doc(userRecord.uid).set(userProfile);
+    // Create user profile in Firestore using Cloud Function
+    const userData = { email, name, educationLevel, interests };
+    await createUserProfile(userRecord.uid, userData);
 
     res.status(201).json({
       success: true,

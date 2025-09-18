@@ -2,58 +2,89 @@ import { firestore } from '../config/firebase.js';
 
 /**
  * Career Path Recommendation Engine
- * Matches user interests and skills to career paths using weighted scoring
+ * Matches user quiz results to career paths using rules-based matching
  */
 export class RecommendationEngine {
   
   /**
-   * Generate career recommendations based on user input
-   * @param {Object} userInput - User interests, skills, and preferences
-   * @returns {Array} Top 3 recommended career paths with scores
+   * Generate career recommendations based on quiz results
+   * @param {string} uid - User ID
+   * @returns {Promise<Array>} Top 3 recommended career paths with scores
    */
-  static async generateRecommendations(userInput) {
-    const { interests, skills = [], educationLevel, preferences = {} } = userInput;
-    
+  static async generateRecommendations(uid) {
     try {
-      // Get all career paths from Firestore
-      const careersSnapshot = await firestore.collection('careers').get();
-      const careers = [];
+      // Get user's quiz results
+      const quizResultsSnapshot = await firestore
+        .collection('quizResults')
+        .where('uid', '==', uid)
+        .orderBy('completedAt', 'desc')
+        .limit(1)
+        .get();
       
-      careersSnapshot.forEach(doc => {
-        careers.push({
-          id: doc.id,
-          ...doc.data()
+      if (quizResultsSnapshot.empty) {
+        throw new Error('No quiz results found for this user');
+      }
+      
+      const quizResult = quizResultsSnapshot.docs[0].data();
+      const { scores } = quizResult;
+      
+      // Get career mappings
+      const careerMappingsSnapshot = await firestore.collection('careerMappings').get();
+      const careerMappings = [];
+      
+      careerMappingsSnapshot.forEach(doc => {
+        careerMappings.push({
+          ...doc.data(),
+          id: doc.id
         });
       });
-
-      // Calculate scores for each career
-      const scoredCareers = careers.map(career => ({
-        ...career,
-        score: this.calculateCareerScore(career, userInput)
-      }));
-
-      // Sort by score and return top 3
-      const topRecommendations = scoredCareers
-        .sort((a, b) => b.score - a.score)
-        .slice(0, 3)
-        .map(career => ({
-          id: career.id,
-          title: career.title,
-          description: career.description,
-          category: career.category,
-          averageSalary: career.averageSalary,
-          growthRate: career.growthRate,
-          requiredSkills: career.requiredSkills,
-          educationRequirements: career.educationRequirements,
-          workEnvironment: career.workEnvironment,
-          jobOutlook: career.jobOutlook,
-          relatedCareers: career.relatedCareers,
-          resources: career.resources,
-          matchScore: Math.round(career.score * 100) / 100,
-          matchReasons: this.getMatchReasons(career, userInput)
-        }));
-
-      return topRecommendations;
+      
+      // Match scores with career mappings
+      const matchedCareers = careerMappings
+        .filter(career => {
+          const { requiredTraits } = career;
+          
+          // Check if user meets minimum requirements for each trait
+          return Object.keys(requiredTraits).every(trait => {
+            const userScore = scores[trait] || 0;
+            const minRequired = requiredTraits[trait].min || 0;
+            return userScore >= minRequired;
+          });
+        })
+        .map(career => {
+          // Calculate match score (percentage)
+          let totalScore = 0;
+          let totalPossible = 0;
+          
+          Object.keys(career.requiredTraits).forEach(trait => {
+            const userScore = scores[trait] || 0;
+            const minRequired = career.requiredTraits[trait].min || 0;
+            totalScore += Math.min(userScore, minRequired);
+            totalPossible += minRequired;
+          });
+          
+          const matchScore = Math.round((totalScore / totalPossible) * 100);
+          
+          return {
+            careerId: career.careerId,
+            careerName: career.careerName,
+            matchScore
+          };
+        });
+      
+      // Sort by match score and get top 3
+      const topCareers = matchedCareers
+        .sort((a, b) => b.matchScore - a.matchScore)
+        .slice(0, 3);
+      
+      // Store recommendations in Firestore
+      await firestore.collection('recommendations').doc(uid).set({
+        uid,
+        topCareers,
+        generatedAt: new Date().toISOString()
+      });
+      
+      return topCareers;
     } catch (error) {
       console.error('Recommendation generation error:', error);
       throw error;

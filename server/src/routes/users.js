@@ -3,6 +3,7 @@ import { firestore } from '../config/firebase.js';
 import { authenticateToken } from '../middleware/auth.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import { validate, userProfileSchema, quizResultSchema } from '../middleware/validation.js';
+import { initializeUserProfile } from '../functions/userFunctions.js';
 
 const router = express.Router();
 
@@ -41,7 +42,7 @@ router.get('/profile', authenticateToken, asyncHandler(async (req, res) => {
  * Update current user's profile information
  */
 router.put('/profile', authenticateToken, validate(userProfileSchema), asyncHandler(async (req, res) => {
-  const { name, educationLevel, interests, skills, preferences } = req.body;
+  const { name, age, grade, location, educationLevel, interests, skills, preferences } = req.body;
 
   try {
     const updateData = {
@@ -50,6 +51,9 @@ router.put('/profile', authenticateToken, validate(userProfileSchema), asyncHand
 
     // Only update provided fields
     if (name !== undefined) updateData.name = name;
+    if (age !== undefined) updateData.age = age;
+    if (grade !== undefined) updateData.grade = grade;
+    if (location !== undefined) updateData.location = location;
     if (educationLevel !== undefined) updateData.educationLevel = educationLevel;
     if (interests !== undefined) updateData.interests = interests;
     if (skills !== undefined) updateData.skills = skills;
@@ -64,6 +68,39 @@ router.put('/profile', authenticateToken, validate(userProfileSchema), asyncHand
     });
   } catch (error) {
     console.error('Update profile error:', error);
+    throw error;
+  }
+}));
+
+/**
+ * POST /api/users/init
+ * Initialize user profile after registration
+ */
+router.post('/init', authenticateToken, validate(userProfileSchema), asyncHandler(async (req, res) => {
+  const { name, age, grade, location } = req.body;
+
+  try {
+    // Initialize user profile using Cloud Function
+    await initializeUserProfile(req.user.uid, { name, age, grade, location });
+
+    res.json({
+      success: true,
+      message: 'Profile initialized successfully',
+      data: {
+        status: 'success',
+        uid: req.user.uid
+      }
+    });
+  } catch (error) {
+    console.error('Profile initialization error:', error);
+    
+    if (error.message === 'User profile not found') {
+      return res.status(404).json({
+        success: false,
+        message: 'User profile not found'
+      });
+    }
+    
     throw error;
   }
 }));

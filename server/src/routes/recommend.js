@@ -1,8 +1,10 @@
 import express from 'express';
+import { body, validationResult } from 'express-validator';
 import { RecommendationEngine } from '../services/recommendationEngine.js';
-import { optionalAuth } from '../middleware/auth.js';
+import { optionalAuth, authenticateUser } from '../middleware/auth.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import { validate, recommendationSchema } from '../middleware/validation.js';
+import { firestore } from '../config/firebase.js';
 
 const router = express.Router();
 
@@ -67,6 +69,82 @@ router.post('/quiz-based', optionalAuth, asyncHandler(async (req, res) => {
     throw error;
   }
 }));
+
+/**
+ * Generate career recommendations based on quiz results
+ * POST /api/recommend/generate
+ */
+router.post('/generate', [
+  authenticateUser,
+  body('uid').isString().notEmpty().withMessage('User ID is required')
+], async (req, res) => {
+  try {
+    // Validate request
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+      return res.status(400).json({ errors: errors.array() });
+    }
+
+    const { uid } = req.body;
+    
+    // Verify user is authorized to access this data
+    if (req.user.uid !== uid && !req.user.isAdmin) {
+      return res.status(403).json({ 
+        error: 'Unauthorized access to user data' 
+      });
+    }
+
+    // Check if user exists
+    const userDoc = await firestore.collection('users').doc(uid).get();
+    if (!userDoc.exists) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+
+    // Generate recommendations
+    const careers = await RecommendationEngine.generateRecommendations(uid);
+    
+    return res.status(200).json({ careers });
+  } catch (error) {
+    console.error('Recommendation generation error:', error);
+    
+    if (error.message === 'No quiz results found for this user') {
+      return res.status(404).json({ error: error.message });
+    }
+    
+    return res.status(500).json({ error: 'Failed to generate recommendations' });
+  }
+});
+
+/**
+ * Get detailed career information
+ * GET /api/recommend/:uid
+ */
+router.get('/:uid', authenticateUser, async (req, res) => {
+  try {
+    const { uid } = req.params;
+    
+    // Verify user is authorized to access this data
+    if (req.user.uid !== uid && !req.user.isAdmin) {
+      return res.status(403).json({ 
+        error: 'Unauthorized access to user data' 
+      });
+    }
+
+    // Get recommendations from Firestore
+    const recommendationDoc = await firestore.collection('recommendations').doc(uid).get();
+    
+    if (!recommendationDoc.exists) {
+      return res.status(404).json({ error: 'No recommendations found for this user' });
+    }
+    
+    const recommendation = recommendationDoc.data();
+    
+    return res.status(200).json(recommendation);
+  } catch (error) {
+    console.error('Get recommendations error:', error);
+    return res.status(500).json({ error: 'Failed to retrieve recommendations' });
+  }
+});
 
 /**
  * GET /api/recommend/similar/:careerPathId

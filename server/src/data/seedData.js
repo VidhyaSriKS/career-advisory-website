@@ -1,4 +1,7 @@
 import { firestore } from '../config/firebase.js';
+import { seedQuizQuestions } from './quizData.js';
+import { seedCareerMappings } from './careerMappingData.js';
+import { seedCollegeData } from './collegeData.js';
 
 /**
  * Sample career path data for seeding the database
@@ -165,5 +168,20 @@ export const isCareersEmpty = async () => {
   } catch (error) {
     console.error('Error checking careers collection:', error);
     return true;
+  }
+};
+
+/**
+ * Seeds all data into Firestore
+ */
+export const seedAllData = async () => {
+  try {
+    await seedCareers();
+    await seedQuizQuestions(firestore);
+    await seedCareerMappings(firestore);
+    await seedCollegeData(firestore);
+    console.log('All data seeded successfully');
+  } catch (error) {
+    console.error('Error seeding all data:', error);
   }
 };

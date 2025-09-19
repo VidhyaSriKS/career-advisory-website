@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { User, Mail, MapPin, GraduationCap, Calendar, Edit2, Save, X, Brain, Heart, Star } from 'lucide-react';
 import toast from 'react-hot-toast';
 import CareerDiscoveryQuiz from '../components/CareerDiscoveryQuiz';
+import { ACADEMIC_LEVELS } from '../utils/constants';
 
 const Profile: React.FC = () => {
   const { user, updateProfile } = useAuth();
@@ -19,13 +20,7 @@ const Profile: React.FC = () => {
     strengths: user?.strengths?.join(', ') || ''
   });
 
-  const academicLevels = [
-    '10th Grade',
-    '12th Grade',
-    'Undergraduate',
-    'Graduate',
-    'Postgraduate'
-  ];
+  const academicLevels = [...ACADEMIC_LEVELS];
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     setFormData({
@@ -34,7 +29,7 @@ const Profile: React.FC = () => {
     });
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const updatedData = {
       ...formData,
       age: formData.age ? parseInt(formData.age.toString()) : undefined,
@@ -42,7 +37,7 @@ const Profile: React.FC = () => {
       strengths: formData.strengths ? formData.strengths.split(',').map(item => item.trim()) : []
     };
 
-    updateProfile(updatedData);
+    await updateProfile(updatedData);
     setIsEditing(false);
     toast.success('Profile updated successfully!');
   };

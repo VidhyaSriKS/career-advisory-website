@@ -1,18 +1,26 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { Eye, EyeOff, Mail, Lock } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const Login: React.FC = () => {
-  const { login } = useAuth();
+  const { login, user, loading, updateProfile } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation() as { state?: { prefillProfile?: { name?: string; age?: number; academicLevel?: string } } };
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  // If already signed in, redirect to profile
+  useEffect(() => {
+    if (user) {
+      navigate('/profile');
+    }
+  }, [user, navigate]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setFormData({
@@ -23,18 +31,41 @@ const Login: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setSubmitting(true);
 
     try {
       await login(formData.email, formData.password);
+      // Persist any details passed from SignInDetails page
+      const details = location.state?.prefillProfile;
+      if (details && (details.name || details.age || details.academicLevel)) {
+        await updateProfile({
+          name: details.name,
+          age: typeof details.age === 'number' ? details.age : undefined,
+          academicLevel: details.academicLevel,
+        });
+      }
       toast.success('Welcome back!');
       navigate('/profile');
     } catch (error) {
       toast.error('Invalid email or password');
     } finally {
-      setLoading(false);
+      setSubmitting(false);
     }
   };
+
+  // While auth context initializes, show a loader
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-gray-600">Loading...</div>
+      </div>
+    );
+  }
+
+  // Avoid flashing the form if already signed in
+  if (user) {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col justify-center py-12 sm:px-6 lg:px-8">
@@ -55,6 +86,7 @@ const Login: React.FC = () => {
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
         <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
           <form className="space-y-6" onSubmit={handleSubmit}>
+            {/* Email */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-gray-700">
                 Email address
@@ -77,6 +109,7 @@ const Login: React.FC = () => {
               </div>
             </div>
 
+            {/* Password */}
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                 Password
@@ -128,36 +161,18 @@ const Login: React.FC = () => {
               </div>
             </div>
 
+            {/* No extra fields here; details are collected on /signin */}
+
             <div>
               <button
                 type="submit"
-                disabled={loading}
+                disabled={submitting}
                 className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                {loading ? 'Signing in...' : 'Sign in'}
+                {submitting ? 'Signing in...' : 'Sign in'}
               </button>
             </div>
           </form>
-
-          <div className="mt-6">
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-300" />
-              </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-2 bg-white text-gray-500">Or continue with</span>
-              </div>
-            </div>
-
-            <div className="mt-6 grid grid-cols-2 gap-3">
-              <button className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                <span>Google</span>
-              </button>
-              <button className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 rounded-md shadow-sm bg-white text-sm font-medium text-gray-500 hover:bg-gray-50">
-                <span>Facebook</span>
-              </button>
-            </div>
-          </div>
         </div>
       </div>
     </div>

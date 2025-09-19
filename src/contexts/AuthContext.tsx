@@ -1,25 +1,13 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-
-interface User {
-  id: string;
-  email: string;
-  name: string;
-  age?: number;
-  academicLevel?: string;
-  location?: string;
-  interests?: string[];
-  strengths?: string[];
-  quizCompleted?: boolean;
-  recommendedStream?: string;
-  quizResults?: any;
-}
+import { User } from '../types';
+import apiService from '../services/api';
 
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<void>;
   register: (email: string, password: string, name: string) => Promise<void>;
   logout: () => void;
-  updateProfile: (profileData: Partial<User>) => void;
+  updateProfile: (profileData: Partial<User>) => Promise<void>;
   loading: boolean;
 }
 
@@ -105,11 +93,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     localStorage.removeItem('currentUser');
   };
 
-  const updateProfile = (profileData: Partial<User>) => {
-    if (user) {
-      const updatedUser = { ...user, ...profileData };
-      setUser(updatedUser);
-      localStorage.setItem('currentUser', JSON.stringify(updatedUser));
+  const updateProfile = async (profileData: Partial<User>) => {
+    if (!user) return;
+
+    // Optimistic update
+    const optimisticUser = { ...user, ...profileData } as User;
+    setUser(optimisticUser);
+    localStorage.setItem('currentUser', JSON.stringify(optimisticUser));
+
+    try {
+      const res = await apiService.updateUserProfile(profileData);
+      if (res.success && res.data) {
+        setUser(res.data);
+        localStorage.setItem('currentUser', JSON.stringify(res.data));
+      }
+    } catch (err) {
+      // If API fails, keep local state; could add toast here if desired
     }
   };
 

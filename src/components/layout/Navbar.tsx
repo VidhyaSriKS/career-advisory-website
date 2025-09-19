@@ -60,11 +60,11 @@ const Navbar: React.FC = () => {
               </div>
             ) : (
               <div className="flex items-center space-x-4">
+                <Link to="/signin" className="btn-primary">
+                  Sign In
+                </Link>
                 <Link to="/login" className="text-gray-700 hover:text-primary-600 px-3 py-2 rounded-md text-sm font-medium transition-colors">
                   Login
-                </Link>
-                <Link to="/register" className="btn-primary">
-                  Sign Up
                 </Link>
               </div>
             )}
@@ -134,18 +134,18 @@ const Navbar: React.FC = () => {
             ) : (
               <>
                 <Link
+                  to="/signin"
+                  className="bg-primary-600 text-white block px-3 py-2 rounded-md text-base font-medium"
+                  onClick={() => setIsMenuOpen(false)}
+                >
+                  Sign In (New User)
+                </Link>
+                <Link
                   to="/login"
                   className="text-gray-700 hover:text-primary-600 block px-3 py-2 rounded-md text-base font-medium"
                   onClick={() => setIsMenuOpen(false)}
                 >
-                  Login
-                </Link>
-                <Link
-                  to="/register"
-                  className="bg-primary-600 text-white block px-3 py-2 rounded-md text-base font-medium"
-                  onClick={() => setIsMenuOpen(false)}
-                >
-                  Sign Up
+                  Login (Existing User)
                 </Link>
               </>
             )}

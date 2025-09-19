@@ -11,7 +11,7 @@ const Footer: React.FC = () => {
           <div className="col-span-1 md:col-span-2">
             <div className="flex items-center mb-4">
               <BookOpen className="h-8 w-8 text-primary-400" />
-              <span className="ml-2 text-xl font-bold">CareerPath</span>
+              <span className="ml-2 text-xl font-bold">Nexora</span>
             </div>
             <p className="text-gray-300 mb-4 max-w-md">
               Empowering students to make informed career decisions through personalized aptitude assessments and comprehensive guidance.

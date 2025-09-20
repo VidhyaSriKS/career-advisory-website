@@ -1,10 +1,14 @@
 import express from 'express';
-import { RecommendationEngine } from '../services/recommendationEngine.js';
+import RecommendationEngine from '../services/recommendationEngine.js';
+import MonitoringService from '../services/monitoring.js';
 import { optionalAuth } from '../middleware/auth.js';
 import { asyncHandler } from '../middleware/errorHandler.js';
 import { validate, recommendationSchema } from '../middleware/validation.js';
 
 const router = express.Router();
+
+// Add monitoring middleware
+router.use(MonitoringService.logRecommendationRequest);
 
 /**
  * POST /api/recommend/careers
@@ -12,16 +16,27 @@ const router = express.Router();
  */
 router.post('/careers', optionalAuth, validate(recommendationSchema), asyncHandler(async (req, res) => {
   const { interests, skills, educationLevel, preferences } = req.body;
+  
+  // Add engineering-specific filters
+  const enhancedPrefs = {
+    ...preferences,
+    engineeringFields: preferences?.engineeringFields || [],
+    minGrowthRate: preferences?.minGrowthRate || 0,
+    minSalary: preferences?.minSalary || 0
+  };
 
   try {
-    const recommendations = await RecommendationEngine.generateRecommendations({
-      interests,
-      skills,
-      educationLevel,
-      preferences
-    });
+    const recommendations = await RecommendationEngine.generateRecommendations(
+      {
+        interests,
+        skills,
+        educationLevel,
+        preferences: enhancedPrefs
+      },
+      req // Pass the request object for monitoring
+    );
 
-    res.json({
+    const responseData = {
       success: true,
       message: 'Career recommendations generated successfully',
       data: {
@@ -29,9 +44,46 @@ router.post('/careers', optionalAuth, validate(recommendationSchema), asyncHandl
         totalFound: recommendations.length,
         generatedAt: new Date().toISOString()
       }
-    });
+    };
+
+    // Track successful recommendation
+    if (recommendations.length > 0) {
+      const engineeringFields = [...new Set(
+        recommendations
+          .filter(r => r.engineeringField)
+          .map(r => r.engineeringField)
+      )];
+
+      await MonitoringService.trackRecommendationEvent({
+        type: 'recommendation_success',
+        userId: req.user?.uid,
+        requestId: req.id,
+        recommendationCount: recommendations.length,
+        engineeringFields,
+        metadata: {
+          userAgent: req.headers['user-agent'],
+          ip: req.ip
+        }
+      });
+    }
+
+    res.json(responseData);
   } catch (error) {
     console.error('Career recommendation error:', error);
+    
+    // Track error
+    await MonitoringService.trackRecommendationEvent({
+      type: 'recommendation_error',
+      userId: req.user?.uid,
+      requestId: req.id,
+      error: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+      metadata: {
+        userAgent: req.headers['user-agent'],
+        ip: req.ip
+      }
+    });
+    
     throw error;
   }
 }));
@@ -51,7 +103,7 @@ router.post('/quiz-based', optionalAuth, asyncHandler(async (req, res) => {
   }
 
   try {
-    const recommendations = await RecommendationEngine.getRecommendationsFromQuiz(answers);
+    const recommendations = await RecommendationEngine.getRecommendationsFromQuiz(answers, req);
 
     res.json({
       success: true,
@@ -169,6 +221,26 @@ router.post('/personalized', optionalAuth, asyncHandler(async (req, res) => {
   } catch (error) {
     console.error('Personalized recommendation error:', error);
     throw error;
+  }
+}));
+
+/**
+ * GET /api/recommend/metrics
+ * Get recommendation system metrics
+ */
+router.get('/metrics', optionalAuth, asyncHandler(async (req, res) => {
+  try {
+    const metrics = await MonitoringService.getRecommendationMetrics(30);
+    res.json({
+      success: true,
+      data: metrics
+    });
+  } catch (error) {
+    console.error('Error getting metrics:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to get metrics'
+    });
   }
 }));
 

@@ -7,7 +7,8 @@ import CareerDiscoveryQuiz from '../components/CareerDiscoveryQuiz';
 import { ACADEMIC_LEVELS } from '../utils/constants';
 
 const Profile: React.FC = () => {
-  const { user, updateProfile } = useAuth();
+  const { currentUser, updateProfile } = useAuth();
+  const user = currentUser; // Alias for compatibility
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [showQuiz, setShowQuiz] = useState(false);
@@ -67,24 +68,25 @@ const Profile: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white shadow rounded-lg">
+        <div className="card">
           {/* Header */}
-          <div className="px-6 py-8 border-b border-gray-200">
+          <div className="bg-gradient-to-r from-primary-500 to-secondary-500 p-6 text-white rounded-t-xl">
             <div className="flex items-center justify-between">
-              <div className="flex items-center">
-                <div className="bg-primary-100 rounded-full p-3">
-                  <User className="h-12 w-12 text-primary-600" />
+              <div className="flex items-center group">
+                <div className="bg-white/20 rounded-full p-3 shadow-sm transition-transform duration-200 group-hover:scale-105">
+                  <User className="h-12 w-12 text-white" />
                 </div>
                 <div className="ml-4">
-                  <h1 className="text-2xl font-bold text-gray-900">{user.name}</h1>
-                  <p className="text-gray-600">{user.email}</p>
+                  <h1 className="text-2xl font-bold text-white">{user.name}</h1>
+                  <p className="text-white/90">{user.email}</p>
                 </div>
               </div>
-              <div className="flex space-x-2">
+              <div className="flex gap-2">
                 {!isEditing ? (
                   <button
                     onClick={() => setIsEditing(true)}
-                    className="btn-primary flex items-center"
+                    className="btn-accent hover:shadow-lg transform hover:-translate-y-0.5 transition-all"
+                    aria-label="Edit profile"
                   >
                     <Edit2 className="h-4 w-4 mr-2" />
                     Edit Profile
@@ -93,14 +95,16 @@ const Profile: React.FC = () => {
                   <>
                     <button
                       onClick={handleSave}
-                      className="btn-primary flex items-center"
+                      className="btn-primary hover:shadow-lg transform hover:-translate-y-0.5 transition-all"
+                      aria-label="Save profile"
                     >
                       <Save className="h-4 w-4 mr-2" />
                       Save
                     </button>
                     <button
                       onClick={handleCancel}
-                      className="bg-gray-500 hover:bg-gray-600 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 flex items-center"
+                      className="btn-outline bg-white/10 hover:bg-white/20 text-white border-white/20"
+                      aria-label="Cancel editing"
                     >
                       <X className="h-4 w-4 mr-2" />
                       Cancel
@@ -119,13 +123,14 @@ const Profile: React.FC = () => {
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Personal Information</h2>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
                       Full Name
                     </label>
                     {isEditing ? (
                       <input
                         type="text"
                         name="name"
+                        id="name"
                         value={formData.name}
                         onChange={handleChange}
                         className="input-field"
@@ -136,13 +141,14 @@ const Profile: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="age" className="block text-sm font-medium text-gray-700 mb-1">
                       Age
                     </label>
                     {isEditing ? (
                       <input
                         type="number"
                         name="age"
+                        id="age"
                         value={formData.age}
                         onChange={handleChange}
                         className="input-field"
@@ -155,12 +161,13 @@ const Profile: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="academicLevel" className="block text-sm font-medium text-gray-700 mb-1">
                       Academic Level
                     </label>
                     {isEditing ? (
                       <select
                         name="academicLevel"
+                        id="academicLevel"
                         value={formData.academicLevel}
                         onChange={handleChange}
                         className="input-field"
@@ -176,13 +183,14 @@ const Profile: React.FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="location" className="block text-sm font-medium text-gray-700 mb-1">
                       Location
                     </label>
                     {isEditing ? (
                       <input
                         type="text"
                         name="location"
+                        id="location"
                         value={formData.location}
                         onChange={handleChange}
                         className="input-field"
@@ -203,13 +211,14 @@ const Profile: React.FC = () => {
                 <h2 className="text-lg font-semibold text-gray-900 mb-4">Interests & Strengths</h2>
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="interests" className="block text-sm font-medium text-gray-700 mb-1">
                       Interests
                     </label>
                     {isEditing ? (
                       <input
                         type="text"
                         name="interests"
+                        id="interests"
                         value={formData.interests}
                         onChange={handleChange}
                         className="input-field"
@@ -217,31 +226,28 @@ const Profile: React.FC = () => {
                       />
                     ) : (
                       <div className="flex flex-wrap gap-2">
-                        {user.interests && user.interests.length > 0 ? (
-                          user.interests.map((interest, index) => (
-                            <span
-                              key={index}
-                              className="bg-primary-100 text-primary-800 px-2 py-1 rounded-full text-sm flex items-center"
-                            >
-                              <Heart className="h-3 w-3 mr-1" />
-                              {interest}
-                            </span>
-                          ))
-                        ) : (
-                          <p className="text-gray-500">No interests specified</p>
-                        )}
+                        {user?.interests?.map((interest: string, index: number) => (
+                          <span
+                            key={index}
+                            className="chip chip-primary"
+                          >
+                            <Heart className="h-3 w-3 mr-1" />
+                            {interest}
+                          </span>
+                        ))}
                       </div>
                     )}
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                    <label htmlFor="strengths" className="block text-sm font-medium text-gray-700 mb-1">
                       Strengths
                     </label>
                     {isEditing ? (
                       <input
                         type="text"
                         name="strengths"
+                        id="strengths"
                         value={formData.strengths}
                         onChange={handleChange}
                         className="input-field"
@@ -249,19 +255,15 @@ const Profile: React.FC = () => {
                       />
                     ) : (
                       <div className="flex flex-wrap gap-2">
-                        {user.strengths && user.strengths.length > 0 ? (
-                          user.strengths.map((strength, index) => (
-                            <span
-                              key={index}
-                              className="bg-secondary-100 text-secondary-800 px-2 py-1 rounded-full text-sm flex items-center"
-                            >
-                              <Star className="h-3 w-3 mr-1" />
-                              {strength}
-                            </span>
-                          ))
-                        ) : (
-                          <p className="text-gray-500">No strengths specified</p>
-                        )}
+                        {user?.strengths?.map((strength: string, index: number) => (
+                          <span
+                            key={index}
+                            className="chip chip-secondary"
+                          >
+                            <Star className="h-3 w-3 mr-1" />
+                            {strength}
+                          </span>
+                        ))}
                       </div>
                     )}
                   </div>
@@ -272,7 +274,7 @@ const Profile: React.FC = () => {
             {/* Career Discovery Quiz Status */}
             <div className="mt-8 pt-8 border-t border-gray-200">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Career Discovery Assessment</h2>
-              <div className="bg-gradient-to-r from-primary-50 to-secondary-50 rounded-lg p-6">
+              <div className="bg-gradient-to-r from-primary-50 to-secondary-50 rounded-lg p-6 shadow-sm">
                 {user.quizCompleted && user.quizResults ? (
                   <div className="flex items-center justify-between">
                     <div className="flex items-center">
@@ -293,12 +295,14 @@ const Profile: React.FC = () => {
                       <button 
                         onClick={() => navigate('/recommendations')}
                         className="btn-primary"
+                        aria-label="View recommendations"
                       >
                         View Recommendations
                       </button>
                       <button 
                         onClick={() => navigate('/quiz')}
-                        className="btn-primary"
+                        className="btn-outline"
+                        aria-label="Retake quiz"
                       >
                         Retake Quiz
                       </button>
@@ -324,6 +328,7 @@ const Profile: React.FC = () => {
                     <button 
                       onClick={() => setShowQuiz(true)}
                       className="btn-primary text-lg px-8 py-3"
+                      aria-label="Start career discovery quiz"
                     >
                       Start Career Discovery Quiz
                     </button>
@@ -338,15 +343,22 @@ const Profile: React.FC = () => {
       
       {/* Career Discovery Quiz Modal/Overlay */}
       {showQuiz && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          <div className="absolute inset-0 bg-black/50 animate-fade-in" aria-hidden="true" />
+          <div
+            className="relative bg-white rounded-lg shadow-xl max-w-6xl w-full max-h-[90vh] overflow-hidden animate-scale-in"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="quizDialogTitle"
+          >
             <div className="flex justify-between items-center p-6 border-b border-gray-200">
-              <h2 className="text-2xl font-bold text-gray-900">Career Path Self-Discovery Quiz</h2>
+              <h2 id="quizDialogTitle" className="text-2xl font-bold text-gray-900">Career Path Self-Discovery Quiz</h2>
               <button
                 onClick={() => setShowQuiz(false)}
-                className="text-gray-400 hover:text-gray-600 transition-colors"
+                className="btn-ghost"
+                aria-label="Close quiz dialog"
               >
-                <X className="h-6 w-6" />
+                <X className="h-5 w-5" />
               </button>
             </div>
             <div className="overflow-y-auto max-h-[calc(90vh-80px)]">

@@ -9,10 +9,18 @@ export interface User {
   interests?: string[];
   strengths?: string[];
   quizCompleted?: boolean;
-  quizResults?: QuizResults;
+  isAdmin?: boolean;
+  quizResults?: {
+    personality?: PersonalityResults;
+    academicStrengths?: AcademicStrengthsResults;
+    interests?: InterestsResults;
+    completedAt?: string;
+  };
+  recommendedStream?: string;
   savedCareerPaths?: string[];
   createdAt?: string;
   updatedAt?: string;
+  getIdToken?: () => Promise<string>;
 }
 
 // Quiz Types
@@ -24,7 +32,7 @@ export interface QuizResults {
   workValues?: WorkValuesResults;
   softSkills?: SoftSkillsResults;
   reflectiveResponses?: ReflectiveResponse[];
-  completedAt: string;
+  completedAt?: string;
   overallScore?: number;
 }
 

@@ -28,8 +28,8 @@ const CollegeDirectory: React.FC = () => {
 
   const states = [
     { id: 'all', name: 'All States' },
-    ...Array.from(new Set(collegesData.map(college => college.location.state)))
-      .map(state => ({ id: state.toLowerCase(), name: state }))
+    { id: 'namakkal', name: 'Namakkal' },
+    { id: 'erode', name: 'Erode' }
   ];
 
   const filteredColleges = useMemo(() => {
@@ -53,7 +53,8 @@ const CollegeDirectory: React.FC = () => {
     // Apply state filter
     if (selectedState !== 'all') {
       colleges = colleges.filter(college => 
-        college.location.state.toLowerCase() === selectedState
+        college.location.city.toLowerCase().includes(selectedState.toLowerCase()) ||
+        college.location.state.toLowerCase().includes(selectedState.toLowerCase())
       );
     }
 

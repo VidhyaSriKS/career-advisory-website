@@ -4,7 +4,8 @@ import { useAuth } from '../contexts/AuthContext';
 import { ArrowRight, BookOpen, Users, Target, TrendingUp, CheckCircle, Star } from 'lucide-react';
 
 const Home: React.FC = () => {
-  const { user } = useAuth();
+  const { currentUser } = useAuth();
+  const user = currentUser; // Alias for compatibility
 
   const features = [
     {
@@ -38,15 +39,16 @@ const Home: React.FC = () => {
 
   return (
     <div className="min-h-screen">
-      {/* Hero Section */}
-      <section className="bg-gradient-to-br from-primary-600 via-primary-700 to-primary-800 text-white py-20">
+      {/* Hero Section with margin-top to account for fixed navbar */}
+      <section className="mt-20 bg-gradient-to-br from-primary-600 via-primary-700 to-primary-800 text-white py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
-            <h1 className="text-4xl md:text-6xl font-bold mb-6 animate-fade-in">
-              Discover Your Perfect
-              <span className="block text-secondary-400">Career Path</span>
+            <h1 className="text-4xl md:text-5xl font-bold leading-tight mb-6 text-white">
+              <span className="!text-white">Discover Your Perfect</span>
+              <br />
+              <span className="!text-white">Career Path</span>
             </h1>
-            <p className="text-xl md:text-2xl text-primary-100 mb-8 max-w-3xl mx-auto">
+            <p className="text-xl md:text-2xl text-white/90 mb-8 max-w-3xl mx-auto">
               Take our scientifically-designed aptitude test and get personalized recommendations for your academic and career journey.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">

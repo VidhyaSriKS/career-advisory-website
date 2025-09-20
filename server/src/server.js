@@ -1,21 +1,28 @@
+// Load environment variables from .env file
+import dotenv from 'dotenv';
+dotenv.config();
+
+console.log('Environment variables loaded:');
+console.log(`PORT: ${process.env.PORT}`);
+console.log(`FRONTEND_URL: ${process.env.FRONTEND_URL}`);
+console.log(`NODE_ENV: ${process.env.NODE_ENV}`);
+
 import express from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 import morgan from 'morgan';
-import dotenv from 'dotenv';
 
 // Import routes
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/users.js';
 import careerRoutes from './routes/careers.js';
 import recommendRoutes from './routes/recommend.js';
+import aiAnalysisRoutes from './routes/aiAnalysis.js';
 
 // Import middleware
-import { errorHandler, notFoundHandler } from './middleware/errorHandler.js';
-
-// Load environment variables
-dotenv.config();
+import errorHandler from './middleware/errorHandler.js';
+import notFoundHandler from './middleware/errorHandler.js';
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -68,6 +75,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/careers', careerRoutes);
 app.use('/api/recommend', recommendRoutes);
+app.use('/api/ai', aiAnalysisRoutes);
 
 // API documentation endpoint
 app.get('/api', (req, res) => {

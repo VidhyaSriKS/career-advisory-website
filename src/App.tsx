@@ -14,11 +14,19 @@ import CareerRecommendations from './pages/CareerRecommendations';
 import CourseMapping from './pages/CourseMapping';
 import CollegeDirectory from './pages/CollegeDirectory';
 import Timeline from './pages/Timeline';
+import AICareerQuizPage from './pages/AICareerQuizPage';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './routes/ProtectedRoute';
 import PublicOnlyRoute from './routes/PublicOnlyRoute';
+import TestFirebase from './pages/TestFirebase';
+import { useAuth } from './context/AuthContext';
+import SignIn from './components/auth/SignIn';
+import SignInPage from './pages/SignInPage';
+import DashboardPage from './pages/DashboardPage'; // Example protected page
 
 function App() {
+  const { currentUser } = useAuth();
+
   return (
     <AuthProvider>
       <Router>
@@ -52,6 +60,18 @@ function App() {
                 }
               />
               <Route
+                path="/auth/signin"
+                element={<SignIn />}
+              />
+              <Route
+                path="/signin-page"
+                element={
+                  <PublicOnlyRoute>
+                    <SignInPage />
+                  </PublicOnlyRoute>
+                }
+              />
+              <Route
                 path="/profile"
                 element={
                   <ProtectedRoute>
@@ -64,7 +84,23 @@ function App() {
               <Route path="/recommendations" element={<CareerRecommendations />} />
               <Route path="/course-mapping" element={<CourseMapping />} />
               <Route path="/colleges" element={<CollegeDirectory />} />
-              <Route path="/timeline" element={<Timeline />} />
+              <Route path="/timeline" element={
+                <ProtectedRoute>
+                  <Timeline />
+                </ProtectedRoute>
+              } />
+              <Route path="/ai-career-quiz" element={
+                <ProtectedRoute>
+                  <AICareerQuizPage />
+                </ProtectedRoute>
+              } />
+              <Route path="/test-firebase" element={<TestFirebase />} />
+              <Route path="/dashboard" element={
+                <ProtectedRoute>
+                  <DashboardPage />
+                </ProtectedRoute>
+              } />
+              <Route path="*" element={<div>Not Found</div>} />
             </Routes>
           </main>
           <Footer />
